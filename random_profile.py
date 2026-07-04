@@ -255,3 +255,48 @@ def random_india_profile() -> dict:
         "country": "India",
         "country_code": "IN",
     }
+
+
+# ─────────────────────────────────────────────────────────────────────
+# Netherlands (Belanda) profile / billing generator untuk iDEAL
+# ─────────────────────────────────────────────────────────────────────
+
+_NL_CITIES = (
+    ("Amsterdam",   "Noord-Holland",  "1011 AB", "Damrak"),
+    ("Rotterdam",   "Zuid-Holland",   "3011 AA", "Coolsingel"),
+    ("Den Haag",    "Zuid-Holland",   "2511 BM", "Binnenhof"),
+    ("Utrecht",     "Utrecht",        "3511 CB", "Oudegracht"),
+    ("Eindhoven",   "Noord-Brabant",  "5611 AE", "Markt"),
+    ("Groningen",   "Groningen",      "9711 AM", "Grote Markt"),
+    ("Tilburg",     "Noord-Brabant",  "5038 EA", "Heuvelring"),
+    ("Almere",      "Flevoland",      "1315 MA", "Stadsplein"),
+    ("Breda",       "Noord-Brabant",  "4811 VB", "Grote Markt"),
+    ("Nijmegen",    "Gelderland",     "6511 PP", "Plein 1944"),
+)
+
+def random_netherlands_profile() -> dict:
+    """Profile + billing Belanda lengkap untuk iDEAL checkout.
+
+    Format kode pos Belanda: 4 angka + spasi + 2 huruf (contoh: 1011 AB).
+    """
+    first = secrets.choice(_FIRST_NAMES)
+    last  = secrets.choice(_LAST_NAMES)
+
+    city, state, postal_code, street = secrets.choice(_NL_CITIES)
+    house_no = secrets.randbelow(199) + 1
+
+    birthdate = _default_birthdate()
+    return {
+        "name":          f"{first} {last}",
+        "first_name":    first,
+        "last_name":     last,
+        "age":           _age_from_birthdate(birthdate),
+        "password":      random_password(),
+        "birthdate":     birthdate,
+        "address_line1": f"{street} {house_no}",
+        "city":          city,
+        "state":         state,
+        "postal_code":   postal_code,   # format: "1011 AB"
+        "country":       "Netherlands",
+        "country_code":  "NL",
+    }
