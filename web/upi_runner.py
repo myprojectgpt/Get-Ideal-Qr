@@ -419,7 +419,8 @@ def _find_hosted_instructions_url(matches: list[dict[str, Any]]) -> str | None:
          nested ``upi_handle_redirect_or_display_qr_code.hosted_instructions_url``.
     Ưu tiên (1); fallback (2) để chắc ăn nếu shape đổi.
     """
-    _PREFIX = "https://payments.stripe.com/upi/instructions/"
+    # iDEAL menggunakan domain transaksi iDEAL langsung
+    _PREFIX = "https://pay.ideal.nl/transactions"
     # (1) direct string value.
     for match in matches:
         value = match.get("value")
@@ -430,9 +431,10 @@ def _find_hosted_instructions_url(matches: list[dict[str, Any]]) -> str | None:
         value = match.get("value")
         if not isinstance(value, dict):
             continue
-        block = value.get("upi_handle_redirect_or_display_qr_code")
+        # iDEAL menggunakan objek redirect_to_url.url dari Stripe
+        block = value.get("redirect_to_url")
         if isinstance(block, dict):
-            url = block.get("hosted_instructions_url")
+            url = block.get("url")
             if isinstance(url, str) and url.startswith(_PREFIX):
                 return url
         url = value.get("hosted_instructions_url")
@@ -547,7 +549,7 @@ def _overlay_email_on_qr(qr_path: Path, email: str) -> None:
     masked = _mask_email(email)
     head = qr_path.read_bytes()[:32]
     stripped = head.lstrip()
-    if head.startswith(b"\\x89PNG\\r\\n\\x1a\\n"):
+    if head.startswith(b"\x89PNG\r\n\x1a\n"):
         _overlay_email_on_png(qr_path, masked)
     elif stripped.startswith(b"<?xml") or stripped.startswith(b"<svg"):
         _overlay_email_on_svg(qr_path, masked)
@@ -949,7 +951,7 @@ async def _create_chatgpt_checkout(
     body: dict[str, Any] = {
         "entry_point": "all_plans_pricing_modal",
         "plan_name": "chatgptplusplan",
-        "billing_details": {"country": "IN", "currency": "INR"},
+        "billing_details": {"country": "NL", "currency": "EUR"},
         "checkout_ui_mode": "custom",
     }
     referer = "https://chatgpt.com/?promo_campaign=plus-1-month-free"
@@ -1013,8 +1015,8 @@ async def _stripe_elements_session(
         "deferred_intent[setup_future_usage]": "off_session",
         "deferred_intent[payment_method_types][0]": "card",
         "deferred_intent[payment_method_types][1]": "link",
-        "deferred_intent[payment_method_types][2]": "upi",
-        "currency": "inr",
+        "deferred_intent[payment_method_types][2]": "ideal",  # Ganti upi ke ideal
+        "currency": "eur",                                    # Ganti inr ke eur
         "key": publishable_key,
         "_stripe_version": _STRIPE_VERSION,
         "elements_init_source": "custom_checkout",
@@ -1124,7 +1126,7 @@ async def _stripe_confirm_upi_qr(
             "stripe_js_id": stripe_js_id,
         },
         "expected_amount": amount,
-        "expected_payment_method_type": "upi",
+        "expected_payment_method_type": "ideal",
         "guid": _stripe_guid(),
         "init_checksum": init_checksum,
         "js_checksum": js_checksum,
@@ -1138,7 +1140,7 @@ async def _stripe_confirm_upi_qr(
             "billing_details": {
                 "address": {
                     "city": profile["city"],
-                    "country": "IN",
+                    "country": "NL",  # Ganti IN ke NL
                     "line1": profile["address_line1"],
                     "postal_code": profile["postal_code"],
                     "state": profile["state"],
