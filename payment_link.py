@@ -94,7 +94,7 @@ class GopayCheckoutContext:
 # ---------------------------------------------------------------------------
 
 _CHECKOUT_URL = "https://chatgpt.com/backend-api/payments/checkout"
-_STRIPE_INIT_URL_TPL = "https://api.stripe.com/v1/payment_pages/{session_id}/init"
+_STRIPE_INIT_URL_TPL = "{{https://api.stripe.com/v1/payment_pages/{session_id}}}/init"
 _CF_MARKERS = ("cf-chl", "just a moment", "cloudflare")
 _IMPERSONATE = _UA_IMPERSONATE_PRIMARY
 _CHECKOUT_MAX_ATTEMPTS = 3
@@ -106,8 +106,9 @@ REGION_BILLING: dict[str, dict[str, str]] = {
     "ID": {"country": "ID", "currency": "IDR"},
     "IN": {"country": "IN", "currency": "INR"},
     "US": {"country": "US", "currency": "USD"},
+    "NL": {"country": "NL", "currency": "EUR"},
 }
-DEFAULT_REGION = "VN"
+DEFAULT_REGION = "NL"
 
 
 # ---------------------------------------------------------------------------
@@ -448,7 +449,7 @@ async def get_checkout_url(
         access_token: Bearer JWT from ChatGPT session.
         proxy: HTTP/HTTPS proxy URL (optional).
         timeout: Per-request timeout in seconds (default 30s).
-        region: Region code (VN, ID, IN, US). Determines country + currency.
+        region: Region code (VN, ID, IN, US, NL). Determines country + currency.
         promo_campaign: Apply the one-month-free campaign.
 
     Returns:
@@ -479,7 +480,7 @@ async def get_checkout_url(
 
 _STRIPE_VERSION_GOPAY = "2020-08-27;custom_checkout_beta=v1"
 _STRIPE_PM_URL = "https://api.stripe.com/v1/payment_methods"
-_STRIPE_CONFIRM_URL_TPL = "https://api.stripe.com/v1/payment_pages/{session_id}/confirm"
+_STRIPE_CONFIRM_URL_TPL = "{{https://api.stripe.com/v1/payment_pages/{session_id}}}/confirm"
 
 # Billing info dùng cho tạo payment method GoPay.
 _GOPAY_BILLING = {
@@ -609,7 +610,7 @@ def _build_gopay_confirm_data(
     client_session_id: str,
 ) -> dict[str, str]:
     return_url = (
-        f"https://pay.openai.com/c/pay/{context.checkout_session_id}"
+        f"{{https://pay.openai.com/c/pay/{context.checkout_session_id}}}"
         f"?redirect_pm_type=gopay&lid={uuid.uuid4()}&ui_mode=hosted"
     )
     return {
@@ -703,7 +704,7 @@ async def get_gopay_midtrans_url(
             legacy callers omit this and use the public-key fallback.
 
     Returns:
-        Midtrans snap URL: https://app.midtrans.com/snap/v4/redirection/{token}...
+        Midtrans snap URL: {{https://app.midtrans.com/snap/v4/redirection/{token}}}...
 
     Raises:
         GopayLinkError: any step fails
