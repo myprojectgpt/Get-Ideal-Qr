@@ -23,9 +23,9 @@ UA + TLS persona: import từ ``user_agent_profile`` (Windows Chrome 145) để
 đồng bộ với reg flow + sentinel — cùng device persona xuyên suốt 1 account.
 
 Cách chạy:
-    python -m gpt_signup_hybrid.pay_upi_http \\
-        --combo 'EMAIL|PASS|SECRET' \\
-        --vpa 'name@oksbi' \\
+    python -m gpt_signup_hybrid.pay_upi_http \
+        --combo 'EMAIL|PASS|SECRET' \
+        --vpa 'name@oksbi' \
         --proxy 'http://user:pass@host:port'
 """
 from __future__ import annotations
@@ -41,7 +41,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from random_profile import random_india_profile
+from random_profile import random_netherlands_profile
 from session_phase import get_session_pure_request
 from user_agent_profile import (
     CURL_IMPERSONATE_PRIMARY as _UA_IMPERSONATE_PRIMARY,
@@ -124,9 +124,9 @@ _STRIPE_VERSION = (
 )
 _CHATGPT_CHECKOUT_URL = "https://chatgpt.com/backend-api/payments/checkout"
 _CHATGPT_APPROVE_URL = "https://chatgpt.com/backend-api/payments/checkout/approve"
-_STRIPE_INIT_URL = "https://api.stripe.com/v1/payment_pages/{id}/init"
-_STRIPE_PAGE_URL = "https://api.stripe.com/v1/payment_pages/{id}"
-_STRIPE_CONFIRM_URL = "https://api.stripe.com/v1/payment_pages/{id}/confirm"
+_STRIPE_INIT_URL = "{{https://api.stripe.com/v1/payment_pages/{id}}}/init"
+_STRIPE_PAGE_URL = "{{https://api.stripe.com/v1/payment_pages/{id}}}"
+_STRIPE_CONFIRM_URL = "{{https://api.stripe.com/v1/payment_pages/{id}}}/confirm"
 _STRIPE_ELEMENTS_URL = "https://api.stripe.com/v1/elements/sessions"
 _STRIPE_CONSUMER_LOOKUP_URL = "https://api.stripe.com/v1/consumers/sessions/lookup"
 
@@ -314,7 +314,7 @@ async def _create_chatgpt_checkout(
     body = {
         "entry_point": "all_plans_pricing_modal",
         "plan_name": "chatgptplusplan",
-        "billing_details": {"country": "IN", "currency": "INR"},
+        "billing_details": {"country": "NL", "currency": "EUR"},
         "promo_campaign": {
             "promo_campaign_id": "plus-1-month-free",
             "is_coupon_from_query_param": False,
@@ -325,7 +325,7 @@ async def _create_chatgpt_checkout(
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json",
         "Accept": "*/*",
-        "Accept-Language": "en-IN,en;q=0.9",
+        "Accept-Language": "nl-NL,nl;q=0.9",
         "Origin": "https://chatgpt.com",
         "Referer": "https://chatgpt.com/?promo_campaign=plus-1-month-free",
         "User-Agent": _USER_AGENT,
@@ -334,7 +334,7 @@ async def _create_chatgpt_checkout(
         "sec-ch-ua-platform": _SEC_CH_UA_PLATFORM,
         "x-openai-target-path": "/backend-api/payments/checkout",
         "x-openai-target-route": "/backend-api/payments/checkout",
-        "OAI-Language": "en-IN",
+        "OAI-Language": "nl-NL",
     }
     log(f"  {_blue('[2/6]')} POST /backend-api/payments/checkout  {_dim('proxy=' + _proxy_log_label(proxies))}")
     resp = await sess.post(
@@ -371,8 +371,8 @@ async def _stripe_init(
 ) -> dict:
     url = _STRIPE_INIT_URL.format(id=session_id)
     form = _to_form({
-        "browser_locale": "en-IN",
-        "browser_timezone": "Asia/Kolkata",
+        "browser_locale": "nl-NL",
+        "browser_timezone": "Europe/Amsterdam",
         "elements_session_client": {
             "client_betas": [
                 "custom_checkout_server_updates_1",
@@ -402,9 +402,9 @@ async def _stripe_init(
         "sec-ch-ua": _SEC_CH_UA,
         "sec-ch-ua-mobile": _SEC_CH_UA_MOBILE,
         "sec-ch-ua-platform": _SEC_CH_UA_PLATFORM,
-        "Accept-Language": "en-IN,en;q=0.9",
+        "Accept-Language": "nl-NL,nl;q=0.9",
     }
-    log(f"  {_blue('[3/6]')} POST /v1/payment_pages/{{cs}}/init  {_dim('proxy=' + _proxy_log_label(proxies))}")
+    log(f"  {_blue('[3/6]')} POST /v1/payment_pages/cs/init  {_dim('proxy=' + _proxy_log_label(proxies))}")
     resp = await sess.post(url, headers=headers, data=form, timeout=30, proxies=proxies)
     if resp.status_code != 200:
         log(f"        {_red('✗')} HTTP {resp.status_code}")
@@ -439,12 +439,12 @@ async def _stripe_elements_session(
         "client_betas[1]": "custom_checkout_manual_approval_1",
         "deferred_intent[mode]": "subscription",
         "deferred_intent[amount]": "0",
-        "deferred_intent[currency]": "inr",
+        "deferred_intent[currency]": "eur",
         "deferred_intent[setup_future_usage]": "off_session",
         "deferred_intent[payment_method_types][0]": "card",
         "deferred_intent[payment_method_types][1]": "link",
-        "deferred_intent[payment_method_types][2]": "upi",
-        "currency": "inr",
+        "deferred_intent[payment_method_types][2]": "ideal",
+        "currency": "eur",
         "key": publishable_key,
         "_stripe_version": _STRIPE_VERSION,
         "elements_init_source": "custom_checkout",
@@ -462,7 +462,7 @@ async def _stripe_elements_session(
         "sec-ch-ua": _SEC_CH_UA,
         "sec-ch-ua-mobile": _SEC_CH_UA_MOBILE,
         "sec-ch-ua-platform": _SEC_CH_UA_PLATFORM,
-        "Accept-Language": "en-IN,en;q=0.9",
+        "Accept-Language": "nl-NL,nl;q=0.9",
     }
     log(f"  {_blue('[4/6]')} GET  /v1/elements/sessions  {_dim('proxy=' + _proxy_log_label(proxies))}")
     resp = await sess.get(
@@ -572,7 +572,7 @@ async def _stripe_confirm_upi(
             "stripe_js_id": stripe_js_id,
         },
         "expected_amount": 0,
-        "expected_payment_method_type": "upi",
+        "expected_payment_method_type": "ideal",
         "guid": _stripe_guid(),
         "init_checksum": init_checksum,
         "js_checksum": js_checksum,
@@ -588,7 +588,7 @@ async def _stripe_confirm_upi(
             "billing_details": {
                 "address": {
                     "city": profile["city"],
-                    "country": "IN",
+                    "country": "NL",
                     "line1": profile["address_line1"],
                     "postal_code": profile["postal_code"],
                     "state": profile["state"],
@@ -603,11 +603,11 @@ async def _stripe_confirm_upi(
             ),
             "referrer": "https://chatgpt.com",
             "time_on_page": int(time.time() * 1000) % 100000,
-            "type": "upi",
-            "upi": {"vpa": vpa},
+            "type": "ideal",
+            "ideal": {},
         },
         "return_url": (
-            f"https://checkout.stripe.com/c/pay/{session_id}"
+            f"{{https://checkout.stripe.com/c/pay/{session_id}}}"
         ),
         "version": "e5ebd5e1e6",
     })
@@ -621,9 +621,9 @@ async def _stripe_confirm_upi(
         "sec-ch-ua": _SEC_CH_UA,
         "sec-ch-ua-mobile": _SEC_CH_UA_MOBILE,
         "sec-ch-ua-platform": _SEC_CH_UA_PLATFORM,
-        "Accept-Language": "en-IN,en;q=0.9",
+        "Accept-Language": "nl-NL,nl;q=0.9",
     }
-    log(f"  {_blue('[5/6]')} POST /v1/payment_pages/{{cs}}/confirm  {_dim('proxy=' + _proxy_log_label(proxies))}")
+    log(f"  {_blue('[5/6]')} POST /v1/payment_pages/cs/confirm  {_dim('proxy=' + _proxy_log_label(proxies))}")
     resp = await sess.post(url, headers=headers, data=form, timeout=30, proxies=proxies)
     body_text = resp.text or ""
     try:
@@ -663,16 +663,16 @@ async def _chatgpt_approve(
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json",
         "Accept": "*/*",
-        "Accept-Language": "en-IN,en;q=0.9",
+        "Accept-Language": "nl-NL,nl;q=0.9",
         "Origin": "https://chatgpt.com",
-        "Referer": f"https://chatgpt.com/checkout/openai_llc/{session_id}",
+        "Referer": f"{{https://chatgpt.com/checkout/openai_llc/{session_id}}}",
         "User-Agent": _USER_AGENT,
         "sec-ch-ua": _SEC_CH_UA,
         "sec-ch-ua-mobile": _SEC_CH_UA_MOBILE,
         "sec-ch-ua-platform": _SEC_CH_UA_PLATFORM,
         "x-openai-target-path": "/backend-api/payments/checkout/approve",
         "x-openai-target-route": "/backend-api/payments/checkout/approve",
-        "OAI-Language": "en-IN",
+        "OAI-Language": "nl-NL",
     }
     log(f"  {_blue('[6/6]')} POST /backend-api/payments/checkout/approve  {_dim('proxy=' + _proxy_log_label(proxies))}")
     resp = await sess.post(_CHATGPT_APPROVE_URL, headers=headers, json=body, timeout=30, proxies=proxies)
@@ -847,10 +847,10 @@ async def run_pay_upi(
     user_email = (session_data.get('user') or {}).get('email')
     log(f"        {_green('✓')} user={user_email}  access_token={_short(access_token, 16, 8)}")
 
-    profile = random_india_profile()
+    profile = random_netherlands_profile()
     log(
-        f"        {_dim('billing IN auto-gen:')} "
-        f"{_bold(profile['name'])} | {profile['city']}, {profile['state']} | {profile['phone']}"
+        f"        {_dim('billing NL auto-gen:')} "
+        f"{_bold(profile['name'])} | {profile['city']}, {profile['state']}"
     )
 
     from curl_cffi.requests import AsyncSession
@@ -922,7 +922,7 @@ async def run_pay_upi(
 
         for i in range(1, sub_count + 1):
             if sub_rotate_billing and i > 1:
-                profile = random_india_profile()
+                profile = random_netherlands_profile()
 
             if sub_rotate_stripe_session and i > 1 and (i - 1) % sub_rotate_stripe_session == 0:
                 log(f"\n  {_yellow('↻')} re-init Stripe (every {sub_rotate_stripe_session})")
