@@ -963,7 +963,7 @@ async def _create_chatgpt_checkout(
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json",
         "Accept": "*/*",
-        "Accept-Language": "en-IN,en;q=0.9",
+        "Accept-Language": "nl-NL,nl;q=0.9",
         "Origin": "https://chatgpt.com",
         "Referer": referer,
         "User-Agent": _USER_AGENT,
@@ -972,7 +972,7 @@ async def _create_chatgpt_checkout(
         "sec-ch-ua-platform": _SEC_CH_UA_PLATFORM,
         "x-openai-target-path": "/backend-api/payments/checkout",
         "x-openai-target-route": "/backend-api/payments/checkout",
-        "OAI-Language": "en-IN",
+        "OAI-Language": "nl-NL",
     }
     resp = await sess.post(
         _CHATGPT_CHECKOUT_URL, headers=headers, json=body, timeout=30, proxies=proxies,
@@ -1011,12 +1011,12 @@ async def _stripe_elements_session(
         "client_betas[1]": "custom_checkout_manual_approval_1",
         "deferred_intent[mode]": "subscription",
         "deferred_intent[amount]": str(amount),
-        "deferred_intent[currency]": "inr",
+        "deferred_intent[currency]": "eur",
         "deferred_intent[setup_future_usage]": "off_session",
         "deferred_intent[payment_method_types][0]": "card",
         "deferred_intent[payment_method_types][1]": "link",
-        "deferred_intent[payment_method_types][2]": "ideal",  # Ganti upi ke ideal
-        "currency": "eur",                                    # Ganti inr ke eur
+        "deferred_intent[payment_method_types][2]": "ideal",
+        "currency": "eur",
         "key": publishable_key,
         "_stripe_version": _STRIPE_VERSION,
         "elements_init_source": "custom_checkout",
@@ -1034,7 +1034,7 @@ async def _stripe_elements_session(
         "sec-ch-ua": _SEC_CH_UA,
         "sec-ch-ua-mobile": _SEC_CH_UA_MOBILE,
         "sec-ch-ua-platform": _SEC_CH_UA_PLATFORM,
-        "Accept-Language": "en-IN,en;q=0.9",
+        "Accept-Language": "nl-NL,nl;q=0.9",
     }
     resp = await sess.get(
         _STRIPE_ELEMENTS_URL, headers=headers, params=params, timeout=30, proxies=proxies,
@@ -1140,7 +1140,7 @@ async def _stripe_confirm_upi_qr(
             "billing_details": {
                 "address": {
                     "city": profile["city"],
-                    "country": "NL",  # Ganti IN ke NL
+                    "country": "NL",
                     "line1": profile["address_line1"],
                     "postal_code": profile["postal_code"],
                     "state": profile["state"],
@@ -1155,8 +1155,8 @@ async def _stripe_confirm_upi_qr(
             ),
             "referrer": "https://chatgpt.com",
             "time_on_page": int(time.time() * 1000) % 100000,
-            "type": "upi",
-            "upi": _upi_payload_for_variant(variant),
+            "type": "ideal",
+            "ideal": {},
         },
         "return_url": _stripe_return_url(session_id),
         "version": "e5ebd5e1e6",
@@ -1170,7 +1170,7 @@ async def _stripe_confirm_upi_qr(
         "sec-ch-ua": _SEC_CH_UA,
         "sec-ch-ua-mobile": _SEC_CH_UA_MOBILE,
         "sec-ch-ua-platform": _SEC_CH_UA_PLATFORM,
-        "Accept-Language": "en-IN,en;q=0.9",
+        "Accept-Language": "nl-NL,nl;q=0.9",
     }
     resp = await sess.post(
         _STRIPE_CONFIRM_URL.format(id=session_id),
@@ -1235,7 +1235,7 @@ async def _stripe_payment_page_refresh(
         "sec-ch-ua": _SEC_CH_UA,
         "sec-ch-ua-mobile": _SEC_CH_UA_MOBILE,
         "sec-ch-ua-platform": _SEC_CH_UA_PLATFORM,
-        "Accept-Language": "en-IN,en;q=0.9",
+        "Accept-Language": "nl-NL,nl;q=0.9",
     }
     resp = await sess.get(
         _STRIPE_PAGE_URL.format(id=session_id),
@@ -1377,7 +1377,7 @@ async def _chatgpt_approve_checkout(
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json",
         "Accept": "*/*",
-        "Accept-Language": "en-IN,en;q=0.9",
+        "Accept-Language": "nl-NL,nl;q=0.9",
         "Origin": "https://chatgpt.com",
         "Referer": f"{{https://chatgpt.com/checkout/openai_llc/{session_id}}}",
         "User-Agent": _USER_AGENT,
@@ -1386,7 +1386,7 @@ async def _chatgpt_approve_checkout(
         "sec-ch-ua-platform": _SEC_CH_UA_PLATFORM,
         "x-openai-target-path": "/backend-api/payments/checkout/approve",
         "x-openai-target-route": "/backend-api/payments/checkout/approve",
-        "OAI-Language": "en-IN",
+        "OAI-Language": "nl-NL",
     }
     resp = await sess.post(
         _CHATGPT_APPROVE_URL, headers=headers, json=body, timeout=30, proxies=proxies,
@@ -1434,7 +1434,7 @@ async def _warm_cf_cookie(
             "text/html,application/xhtml+xml,application/xml;q=0.9,"
             "image/avif,image/webp,*/*;q=0.8"
         ),
-        "Accept-Language": "en-IN,en;q=0.9",
+        "Accept-Language": "nl-NL,nl;q=0.9",
         "User-Agent": _USER_AGENT,
         "sec-ch-ua": _SEC_CH_UA,
         "sec-ch-ua-mobile": _SEC_CH_UA_MOBILE,
