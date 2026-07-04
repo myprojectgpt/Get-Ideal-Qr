@@ -490,7 +490,7 @@ def _upi_payload_for_variant(variant: str) -> dict[str, Any]:
 
 
 def _stripe_return_url(session_id: str) -> str:
-    return f"https://checkout.stripe.com/c/pay/{session_id}"
+    return f"{{https://checkout.stripe.com/c/pay/{session_id}}}"
 
 
 def _extract_amount(init_data: dict[str, Any]) -> int:
@@ -547,7 +547,7 @@ def _overlay_email_on_qr(qr_path: Path, email: str) -> None:
     masked = _mask_email(email)
     head = qr_path.read_bytes()[:32]
     stripped = head.lstrip()
-    if head.startswith(b"\x89PNG\r\n\x1a\n"):
+    if head.startswith(b"\\x89PNG\\r\\n\\x1a\\n"):
         _overlay_email_on_png(qr_path, masked)
     elif stripped.startswith(b"<?xml") or stripped.startswith(b"<svg"):
         _overlay_email_on_svg(qr_path, masked)
@@ -630,14 +630,14 @@ def _overlay_email_on_svg(qr_path: Path, masked: str) -> None:
     band_vh = max(vh * 0.12, 48.0)
     band_h_px = max(height * 0.12, 48.0)
 
-    rect = ET.SubElement(root, f"{{{NS}}}rect")
+    rect = ET.SubElement(root, f"{10}rect")
     rect.set("x", _fmt_svg_num(vx))
     rect.set("y", _fmt_svg_num(vy + vh))
     rect.set("width", _fmt_svg_num(vw))
     rect.set("height", _fmt_svg_num(band_vh))
     rect.set("fill", "white")
 
-    text = ET.SubElement(root, f"{{{NS}}}text")
+    text = ET.SubElement(root, f"{10}text")
     text.set("x", _fmt_svg_num(vx + vw / 2))
     text.set("y", _fmt_svg_num(vy + vh + band_vh * 0.65))
     text.set("text-anchor", "middle")
@@ -1377,7 +1377,7 @@ async def _chatgpt_approve_checkout(
         "Accept": "*/*",
         "Accept-Language": "en-IN,en;q=0.9",
         "Origin": "https://chatgpt.com",
-        "Referer": f"https://chatgpt.com/checkout/openai_llc/{session_id}",
+        "Referer": f"{{https://chatgpt.com/checkout/openai_llc/{session_id}}}",
         "User-Agent": _USER_AGENT,
         "sec-ch-ua": _SEC_CH_UA,
         "sec-ch-ua-mobile": _SEC_CH_UA_MOBILE,
@@ -1722,7 +1722,7 @@ async def run_upi_qr_probe(
     from curl_cffi.requests import AsyncSession  # noqa: F401 — kept for type hints
     import stripe_token as _st
     from pay_upi_http import _stripe_init
-    from random_profile import random_india_profile
+    from random_profile import random_netherlands_profile
     from session_phase import SessionError, get_session_pure_request, is_fatal_login_error
 
     # ─────────────────────────────────────────────────────────────────
@@ -1858,7 +1858,7 @@ async def run_upi_qr_probe(
     # approve loop, sang phase kế. KHÔNG reset `approve_index_total` và
     # `proxy_virtual_attempt`.
     # ─────────────────────────────────────────────────────────────────
-    profile = random_india_profile()  # đồng nhất profile mọi phase
+    profile = random_netherlands_profile()  # đồng nhất profile mọi phase
     token_config = None  # extract 1 lần ở phase 1, các phase sau reuse
     final_confirmed = False
     final_approved = False
